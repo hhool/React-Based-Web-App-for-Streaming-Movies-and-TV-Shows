@@ -76,7 +76,7 @@ function GenreList({ type, onGenreSelect }) {
     >
       <div className="max-w-7xl mx-auto px-2 py-1.5 sm:py-2">
         <motion.ul
-          className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-start overflow-x-auto scrollbar-hide"
+          className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-start scrollbar-hide"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           variants={{
             show: {
