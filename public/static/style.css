@@ -1,0 +1,42 @@
+/* Default theme (bright, daytime) */
+body.day-theme {
+    background-color: #ffffff; /* White background */
+    color: #333333; /* Dark text color */
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  h1.day-theme {
+    color: #444444; /* Slightly darker text color */
+  }
+  
+  li.day-theme {
+    margin-bottom: 10px;
+  }
+  
+  /* Dark theme (nighttime) */
+  body.night-theme {
+    background-color: #121212; /* Dark background */
+    color: #f0f0f0; /* Light text color */
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  h1.night-theme {
+    color: #f0f0f0; /* Light text color */
+  }
+  
+  li.night-theme {
+    margin-bottom: 10px;
+  }
+  
+  .theme-switcher {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: #444;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+  }
