@@ -21,6 +21,14 @@ export default defineConfig({
           dest: 'static/' // Copy to the root of the dist directory
         },
         {
+          src: 'public/images/*.jpg', // Adjust the path to your JSON files
+          dest: 'images/' // Copy to the root of the dist directory
+        },
+        {
+          src: 'public/images/*.ico', // Adjust the path to your JSON files
+          dest: 'images/' // Copy to the root of the dist directory
+        },
+        {
           src: 'public/ads.txt', // Copy ads.txt file
           dest: '.' // Copy to the root of the dist directory
         }
