@@ -68,7 +68,7 @@ const VideoPlayer = ({ movieId }) => {
 
   if (!movieId) return null;
 
-  const iframeSrc = `https://vidsrc.dev/embed/movie/${movieId}`;
+  const iframeSrc = `https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=true`;
 
   return (
     <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
