@@ -68,8 +68,7 @@ const VideoPlayer = ({ movieId }) => {
 
   if (!movieId) return null;
 
-  const iframeSrc = `https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=true`;
-
+  const iframeSrc = `https://player.videasy.net/movie/${movieId}`;
   return (
     <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
       <iframe
