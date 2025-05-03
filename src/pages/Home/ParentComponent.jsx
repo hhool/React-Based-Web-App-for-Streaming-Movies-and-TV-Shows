@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import hooks
 import PropTypes from 'prop-types';
 import Movie from './Movie/Movie';
 import Series from './TV/Series';
@@ -12,6 +13,7 @@ import { MovieProvider } from './MoviesContext';
 import Navbar from './Navbar';
 import Loadingspinner from './resused/Loadingspinner';
 
+// --- MainContent remains largely the same, accepting activePage ---
 const MainContent = ({ activePage, isLoading }) => {
   const { selectedMovie, selectMovie } = useMovie();
   const { selectedSeries, selectSeries } = useSeries();
@@ -21,21 +23,20 @@ const MainContent = ({ activePage, isLoading }) => {
     selectSeries(null);
   };
 
-  const showNavigation = !selectedMovie && !selectedSeries; // Only show navigation buttons when no details are selected
+  const showNavigation = !selectedMovie && !selectedSeries;
 
   return (
     <main
       className={`w-full transition-all duration-500 ${showNavigation ? 'pt-20' : 'pt-4'}`}
     >
-      {/* Show movie or series list only when neither movie nor series details are selected */}
       {showNavigation && (
         <div className="gap-12">
+          {/* Render based on activePage prop */}
           {activePage === 'movies' && <Movie />}
           {activePage === 'series' && <Series />}
         </div>
       )}
 
-      {/* Show details when movie or series is selected */}
       {(selectedMovie || selectedSeries) && (
         <div className="animate-fadeIn px-4 md:px-8 lg:px-16 py-8">
           <button
@@ -80,13 +81,31 @@ MainContent.propTypes = {
   activePage: PropTypes.string.isRequired,
   isLoading: PropTypes.bool.isRequired,
 };
+// --- End MainContent ---
 
+
+// --- ParentComponent modifications ---
 function ParentComponent() {
-  const [activePage, setActivePage] = useState('movies');
+  const location = useLocation(); // Get location object
+  const navigate = useNavigate(); // Get navigate function
+  const [activePage, setActivePage] = useState('movies'); // Default state
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [currentPage, setCurrentPage] = useState('home');
+  const [isLoading, setIsLoading] = useState(false); // Keep loading for transitions
+
+  // Effect to update activePage based on URL
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    setIsLoading(true); // Start loading on URL change
+    if (queryParams.has('tv')) {
+      setActivePage('series');
+    } else {
+      // Default to movies if no param or ?movie is present
+      setActivePage('movies');
+    }
+    // Simulate loading delay for visual feedback
+    const timer = setTimeout(() => setIsLoading(false), 300);
+    return () => clearTimeout(timer);
+  }, [location.search]); // Re-run when query parameters change
 
   const handleScroll = useCallback(() => {
     setScrollPosition(window.scrollY);
@@ -101,40 +120,45 @@ function ParentComponent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Update handleNavigation to change the URL
   const handleNavigation = (page) => {
-    setIsLoading(true);
-    setCurrentPage(page);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 400); // Simulating loading for navigation
-    setActivePage(page);
+    const targetQuery = page === 'movies' ? '?movie' : '?tv';
+    // Only navigate if the target is different from the current URL query
+    if (location.search !== targetQuery) {
+      navigate(targetQuery); // Update URL query parameter
+    }
+    // Loading state is handled by the useEffect listening to location.search
   };
 
+  // handlePageChange might not be needed if Navbar also uses handleNavigation
+  // If Navbar needs separate logic, keep it, otherwise it can be removed or merged.
   const handlePageChange = (page) => {
-    setActivePage(page);
+     // If Navbar needs to directly set the view without URL change (less common),
+     // you might need setActivePage here, but ideally Navbar links should also navigate.
+     // For now, let's assume Navbar also triggers handleNavigation or similar URL change.
+     console.log("Navbar page change:", page); // Placeholder
   };
 
   return (
     <SeriesProvider>
       <MovieProvider>
+        {/* Pass the URL-derived activePage down */}
         <AppContent
           activePage={activePage}
           scrollPosition={scrollPosition}
           isLoading={isLoading}
           handleNavigation={handleNavigation}
-          handlePageChange={handlePageChange}
+          handlePageChange={handlePageChange} // Pass down if needed by Navbar
           scrollToTop={scrollToTop}
         />
       </MovieProvider>
     </SeriesProvider>
   );
 }
+// --- End ParentComponent modifications ---
 
-MainContent.propTypes = {
-  activePage: PropTypes.string.isRequired,
-  isLoading: PropTypes.bool.isRequired,
-};
 
+// --- AppContent remains the same, receiving props ---
 const AppContent = ({
   activePage,
   scrollPosition,
@@ -154,9 +178,9 @@ const AppContent = ({
         className={`top-0 left-0 fixed w-full shadow-lg z-50 bg-black/90 ${!showNavbar ? 'hidden' : ''}`}
       >
         <Navbar
-          onNavigate={handleNavigation}
+          onNavigate={handleNavigation} // Use handleNavigation for Navbar links too
           activePage={activePage}
-          onPageChange={handlePageChange}
+          onPageChange={handlePageChange} // Keep if Navbar has separate logic
         />
       </nav>
 
@@ -164,7 +188,7 @@ const AppContent = ({
       {!selectedMovie && !selectedSeries && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-40 flex gap-4">
           <button
-            onClick={() => handleNavigation('movies')}
+            onClick={() => handleNavigation('movies')} // Use handleNavigation
             className={`flex items-center justify-center gap-2 w-full px-4 py-3 text-white rounded-xl font-medium text-sm sm:text-base transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl ${
               activePage === 'movies'
                 ? 'bg-orange-600 shadow-orange-500/30'
@@ -175,7 +199,7 @@ const AppContent = ({
             Movies
           </button>
           <button
-            onClick={() => handleNavigation('series')}
+            onClick={() => handleNavigation('series')} // Use handleNavigation
             className={`flex items-center justify-center gap-2 w-full px-4 py-3 text-white rounded-xl font-medium text-sm sm:text-base transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl ${
               activePage === 'series'
                 ? 'bg-orange-600 shadow-orange-500/30'
@@ -213,5 +237,6 @@ AppContent.propTypes = {
   handlePageChange: PropTypes.func.isRequired,
   scrollToTop: PropTypes.func.isRequired,
 };
+// --- End AppContent ---
 
 export default ParentComponent;
