@@ -131,10 +131,15 @@ const ContentGrid = ({ genreId, type, onSelect }) => {
   const renderContent = () => {
     const items = state.content.map((item, index) => {
       const isLastElement = index === state.content.length - 1;
+      console.log('item', item);
       const posterPath = item.poster_path
         ? `${POSTER_BASE_URL}${item.poster_path}`
-        : '/assets/placeholder.jpg';
-
+        : null;
+      if (!posterPath) {
+        // If the poster path is not available,
+        // remove the item from the list
+        return null;
+      }
       return (
         <div
           key={item.id}

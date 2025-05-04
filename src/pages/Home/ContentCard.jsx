@@ -1,147 +1,92 @@
-import { useState, memo, useCallback } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
-import { FaPlay } from 'react-icons/fa';
+import { BiStar, BiCalendar } from 'react-icons/bi'; // Example icons
 
-const RatingCircle = ({ rating }) => {
-  const percentage = (rating / 10) * 100;
+const ContentCard = ({ title, poster, rating, onClick, releaseDate, ariaLabel }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    console.warn(`Image failed to load: ${poster}`);
+    setImageError(true);
+  };
+
+  // If the image failed to load, don't render the card
+  if (imageError) {
+    return null;
+  }
+
+  // Helper function to safely get the year
+  const getYear = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return !isNaN(date.getFullYear()) ? date.getFullYear() : null;
+  };
+
+  const year = getYear(releaseDate);
 
   return (
-    <div className="relative w-8 h-8 bg-black backdrop-blur-sm rounded-full flex items-center justify-center">
-      <svg viewBox="0 0 36 36" className="absolute w-full h-full -rotate-90">
-        <path
-          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-          fill="none"
-          stroke="#444"
-          strokeWidth="3"
+    <div
+      className="flex flex-col h-full bg-gray-800 rounded-lg overflow-hidden shadow-lg cursor-pointer group transition-all duration-300 ease-in-out" // Changed to flex column
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel || title}
+      onKeyPress={(e) => e.key === 'Enter' && onClick()}
+    >
+      {/* Image Container */}
+      <div className="relative w-full aspect-[2/3] overflow-hidden"> {/* Added overflow-hidden */}
+        <img
+          src={poster}
+          alt={`Poster for ${title}`}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          loading="lazy"
+          onError={handleImageError}
         />
-        <path
-          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-          fill="none"
-          stroke={rating >= 7 ? '#22c55e' : rating >= 5 ? '#eab308' : '#ef4444'}
-          strokeWidth="3"
-          strokeDasharray={`${percentage}, 100`}
-          className="transition-all duration-700 ease-out"
-        />
-      </svg>
-      <span className="text-white text-xs font-bold z-10">
-        {rating ? `${Math.round(rating * 10)}%` : 'N/A'}
-      </span>
+         {/* Removed the hover overlay div */}
+      </div>
+
+      {/* Details Section - Always Visible Below Image */}
+      <div className="p-2 md:p-3 flex-grow flex flex-col justify-between"> {/* Added padding and flex */}
+        {/* Title */}
+        <h3 className="text-white text-sm font-semibold line-clamp-2 mb-1 group-hover:text-cyan-400 transition-colors" title={title}> {/* Allow two lines for title */}
+          {title}
+        </h3>
+
+        {/* Date and Rating */}
+        <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
+          {/* Release Year */}
+          {year && (
+             <span className="flex items-center">
+               <BiCalendar className="mr-1" />
+               {year}
+             </span>
+          )}
+          {/* Rating */}
+          {rating !== undefined && rating > 0 ? ( // Check if rating exists and is positive
+            <span className="flex items-center">
+              <BiStar className="text-yellow-400 mr-1" />
+              {rating.toFixed(1)}
+            </span>
+          ) : (
+             // Optional: Show something if rating is 0 or undefined
+             <span className="flex items-center text-gray-500">
+                <BiStar className="mr-1" />
+                N/A
+             </span>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
-
-const ContentCard = memo(
-  ({
-    title,
-    poster,
-    rating,
-    onClick = () => {},
-    className = '',
-    placeholderImage = '/assets/images/placeholder.jpg',
-    releaseDate,
-  }) => {
-    const [imageState, setImageState] = useState({
-      isLoading: true,
-      hasError: false,
-    });
-
-    const handleImageState = useCallback((type) => {
-      setImageState((prev) => ({
-        ...prev,
-        isLoading: type === 'loading',
-        hasError: type === 'error',
-      }));
-    }, []);
-
-    const handleKeyPress = useCallback(
-      (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
-      },
-      [onClick]
-    );
-
-    const imageSrc = imageState.hasError ? placeholderImage : poster;
-    const currentDate = new Date();
-    const isReleased = releaseDate
-      ? new Date(releaseDate) <= currentDate
-      : true;
-
-    // If the movie/series is unreleased, don't render the component
-    if (!isReleased) return null;
-
-    return (
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`group relative w-full overflow-hidden rounded-lg shadow-lg cursor-pointer
-         transition-transform mb-20 mr-4 ml-3  duration-300 ${className}`}
-        onClick={onClick}
-        role="button"
-        tabIndex={0}
-        onKeyPress={handleKeyPress}
-        aria-label={`${title} - Rating: ${rating || 'N/A'}`}
-      >
-        <div className="relative w-full aspect-[2/3]">
-          {imageState.isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-800/90">
-              <div className="animate-pulse rounded-lg w-full h-full bg-gray-700/50" />
-            </div>
-          )}
-          <img
-            src={imageSrc}
-            alt={`${title} poster`}
-            className={`w-full h-full object-cover transition-all duration-500 ${
-              imageState.isLoading
-                ? 'opacity-0 scale-105'
-                : 'opacity-100 scale-100'
-            }`}
-            onLoad={() => handleImageState('loaded')}
-            onError={() => handleImageState('error')}
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent
-          opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <FaPlay className="text-white text-2xl transform group-hover:scale-110 transition-transform duration-300" />
-            </div>
-          </div>
-          <div className="absolute bottom-2 left-2">
-            <RatingCircle rating={rating} />
-          </div>
-        </div>
-        <div className="p-2 space-y-1">
-          <h3 className="text-white text-sm font-medium line-clamp-1">
-            {title}
-          </h3>
-          {releaseDate && (
-            <span className="text-gray-400 text-xs">
-              {new Date(releaseDate).getFullYear()}
-            </span>
-          )}
-        </div>
-      </motion.div>
-    );
-  }
-);
-
-RatingCircle.propTypes = {
-  rating: PropTypes.number,
 };
 
 ContentCard.propTypes = {
   title: PropTypes.string.isRequired,
   poster: PropTypes.string.isRequired,
   rating: PropTypes.number,
-  onClick: PropTypes.func,
-  className: PropTypes.string,
-  placeholderImage: PropTypes.string,
+  onClick: PropTypes.func.isRequired,
   releaseDate: PropTypes.string,
+  ariaLabel: PropTypes.string,
 };
 
-ContentCard.displayName = 'ContentCard';
 export default ContentCard;
